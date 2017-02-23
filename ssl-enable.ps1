@@ -17,7 +17,7 @@ if(!(test-path c:/Apache/bin/openssl.exe)){
 }
 
 $res = Get-Command -ErrorAction SilentlyContinue ${env:SYSTEMDRIVE}\windows\system32\fbwfMgr.exe
-if($lastExitCode) {
+if($?) {
 	# this machine has fbwfmgr onit
 	$res1 = & ${env:SYSTEMDRIVE}\windows\system32\fbwfMgr.exe
 	if($res1 | Select-String 'filter state:' | Select-Object -First 1 | Select-String enabled) {
