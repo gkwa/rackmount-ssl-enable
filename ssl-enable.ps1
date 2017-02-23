@@ -5,10 +5,20 @@ usage:
 Set-ExecutionPolicy Unrestricted
 Copy-Item //tsclient/rackmount-ssl-enable/ssl-enable.ps1 .; ./ssl-enable.ps1
 
-powershell.exe -executionpolicy bypass -noninteractive -noprofile -noninteractive -command "(new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/TaylorMonacelli/rackmount-ssl-enable/master/ssl-enable.ps1') | iex"
+# disable fbwfmgr and reboot immediately
+powershell.exe -executionpolicy bypass -noninteractive -noprofile -noninteractive -command "& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/TaylorMonacelli/rackmount-ssl-enable/master/ssl-enable.ps1'))) -reboot"
+
+# dont disable/reboot, prompt to do so
+powershell.exe -executionpolicy bypass -noninteractive -noprofile -noninteractive -command "& $([scriptblock]::Create((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/TaylorMonacelli/rackmount-ssl-enable/master/ssl-enable.ps1')))"
 
 #>
 
+
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)] [switch]$reboot = $false
+)
 
 $computername=$env:COMPUTERNAME
 
@@ -23,8 +33,14 @@ if($?) {
 	$res1 = & ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe
 	if($res1 | Select-String 'filter state:' | Select-Object -First 1 | Out-String |
 	  Where-Object {$_ -like '*enabled*'}) {
-		  Write-Error "Write-protect is on, quitting prematurely.  Turn write protect off, reboot and retry."
-		  Exit 1
+		  if($reboot) {
+			  Write-Warning "Turning off FBWF Write protect and rebooting immediately"
+			  & ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe /disable
+			  shutdown /f /t 1 /r /c "Rebooting after disabling write protect"
+		  } else {
+			  Write-Error "Write-protect is on, quitting prematurely.  Turn write protect off, reboot and retry."
+			  Exit 1
+		  }
 	}
 }
 
