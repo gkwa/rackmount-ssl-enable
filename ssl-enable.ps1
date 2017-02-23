@@ -11,8 +11,8 @@ powershell.exe -executionpolicy bypass -noninteractive -noprofile -noninteractiv
 
 $computername=$env:COMPUTERNAME
 
-if(!(test-path c:/Apache/bin/openssl.exe)){
-	Write-Host "Can't find c:/Apache/bin/openssl.exe, quitting prematurely"
+if(!(test-path ${env:SYSTEMDRIVE}/Apache/bin/openssl.exe)){
+	Write-Error "Can't find c:/Apache/bin/openssl.exe, quitting prematurely"
 	Exit 1
 }
 
@@ -20,8 +20,9 @@ $res = Get-Command -ErrorAction SilentlyContinue ${env:SYSTEMDRIVE}\windows\syst
 if($?) {
 	# this machine has fbwfmgr onit
 	$res1 = & ${env:SYSTEMDRIVE}\windows\system32\fbwfMgr.exe
-	if($res1 | Select-String 'filter state:' | Select-Object -First 1 | Select-String enabled) {
-		Write-Host "Write-protect is on, quitting prematurely.  Turn write protect off, reboot and retry."
+	if($res1 | Select-String 'filter state:' | Select-Object -First 1 |
+	  Out-String | Where-Object {$_ -like '*enabled*'}) {
+		Write-Error "Write-protect is on, quitting prematurely.  Turn write protect off, reboot and retry."
 		Exit 1
 	}
 }
