@@ -16,10 +16,10 @@ if(!(test-path ${env:SYSTEMDRIVE}/Apache/bin/openssl.exe)){
 	Exit 1
 }
 
-$res = Get-Command -ErrorAction SilentlyContinue ${env:SYSTEMDRIVE}\windows\system32\fbwfMgr.exe
+$res = Get-Command -ErrorAction SilentlyContinue ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe
 if($?) {
 	# this machine has fbwfmgr onit
-	$res1 = & ${env:SYSTEMDRIVE}\windows\system32\fbwfMgr.exe
+	$res1 = & ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe
 	if($res1 | Select-String 'filter state:' | Select-Object -First 1 |
 	  Out-String | Where-Object {$_ -like '*enabled*'}) {
 		Write-Error "Write-protect is on, quitting prematurely.  Turn write protect off, reboot and retry."
@@ -124,7 +124,7 @@ Get-WmiObject win32_service |
 	}
 
 # Start apache from shortcut for 9400
-$glob = "${env:SYSTEMDRIVE}\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\Apache HTTP Server.lnk"
+$glob = "${env:SYSTEMDRIVE}/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/Apache HTTP Server.lnk"
 $httpd_link = Get-ChildItem $glob -ea 0 | Select-Object -Last 1 | Select-Object -exp fullname
 if($httpd_link -ne $null)
 {
