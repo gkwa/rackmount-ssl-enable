@@ -29,7 +29,7 @@ if(!(test-path ${env:SYSTEMDRIVE}/Apache/bin/openssl.exe)){
 
 $res = Get-Command -ErrorAction SilentlyContinue ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe
 if($?) {
-	# this machine has fbwfmgr onit
+	<# this machine has fbwfmgr onit #>
 	$res1 = & ${env:SYSTEMDRIVE}/windows/system32/fbwfMgr.exe
 	if($res1 | Select-String 'filter state:' | Select-Object -First 1 | Out-String |
 	  Where-Object {$_ -like '*enabled*'}) {
@@ -57,7 +57,7 @@ c:/Apache/bin/openssl.exe `
   -newkey rsa:2048 `
   -days 365 `
   2>&1 | Where-Object {
-	  # filter empty newline
+	  <# filter empty newline #>
 	  $_ -like "*\w*" `
 	  -and $_ -notlike "WARNING: can't open config file: *:/openssl-*-win32/*/openssl.cnf" `
 	  -and $_ -notlike "*writing new private key to*" `
@@ -125,34 +125,32 @@ CustomLog "c:/Apache/logs/ssl_request.log" \
 '@
 Set-Content -Path c:/Apache/conf/httpd-streambox-ssl.conf -Value $sslconf
 
-# Stop apache service if it exists and its set to run automatically.
-# This rules out sbt3-9400
+<# Stop apache service if it exists and its set to run automatically. This rules out sbt3-9400 #>
 Get-WmiObject win32_service |
   Where-Object {
 	  $_.Name -like 'Apache2.4' -and $_.StartMode -eq 'Auto'
   } | Stop-Service 2>&1 | Out-String |
 	Where-Object {
-		# filter empty newline
-		$_ -like "*\w*" `
-		  -and $_ -notlike "*WARNING: Waiting for service * to finish *"
+		<# filter empty newline #>
+		$_ -like "*\w*" -and $_ -notlike "*WARNING: Waiting for service * to finish *"
 	}
 
-# Kill httpd.exe for sbt3-9400, its running as console app outside service
+<# Kill httpd.exe for sbt3-9400, its running as console app outside service #>
 Get-Process | Where-Object { $_.Name -like 'httpd' } | Stop-Process -Force
 
-# Start apache service if it exists and set to run automatically. This
-# rules out sbt3-9400
+<# Start apache service if it exists and set to run automatically. This
+rules out sbt3-9400 #>
 Get-WmiObject win32_service |
   Where-Object {
 	  $_.Name -like 'Apache2.4' -and $_.StartMode -eq 'Auto'
   } | Start-Service 2>&1 | Out-String |
 	Where-Object {
-		# filter empty newline
+		<# filter empty newline #>
 		$_ -like "*\w*" `
 		  -and $_ -notlike "*WARNING: Waiting for service * to start *"
 	}
 
-# Start apache from shortcut for 9400
+<# Start apache from shortcut for 9400 #>
 $glob = "${env:SYSTEMDRIVE}/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/Apache HTTP Server.lnk"
 $httpd_link = Get-ChildItem $glob -ea 0 | Select-Object -Last 1 | Select-Object -exp fullname
 if($httpd_link -ne $null)
