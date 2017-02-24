@@ -125,6 +125,18 @@ CustomLog "c:/Apache/logs/ssl_request.log" \
 '@
 Set-Content -Path c:/Apache/conf/httpd-streambox-ssl.conf -Value $sslconf
 
+# Stop apache service if it exists and its set to run automatically.
+# This rules out sbt3-9400
+Get-WmiObject win32_service |
+  Where-Object {
+	  $_.Name -like 'Apache2.4' -and $_.StartMode -eq 'Auto'
+  } | Stop-Service 2>&1 | Out-String |
+	Where-Object {
+		# filter empty newline
+		$_ -like "*\w*" `
+		  -and $_ -notlike "*WARNING: Waiting for service * to finish *"
+	}
+
 # Kill httpd.exe for sbt3-9400, its running as console app outside service
 Get-Process | Where-Object { $_.Name -like 'httpd' } | Stop-Process -Force
 
@@ -133,11 +145,11 @@ Get-Process | Where-Object { $_.Name -like 'httpd' } | Stop-Process -Force
 Get-WmiObject win32_service |
   Where-Object {
 	  $_.Name -like 'Apache2.4' -and $_.StartMode -eq 'Auto'
-  } | Restart-Service 2>&1 | Out-String |
+  } | Start-Service 2>&1 | Out-String |
 	Where-Object {
 		# filter empty newline
 		$_ -like "*\w*" `
-		  -and $_ -notlike "*WARNING: Waiting for service * to finish *"
+		  -and $_ -notlike "*WARNING: Waiting for service * to start *"
 	}
 
 # Start apache from shortcut for 9400
